@@ -1,0 +1,2158 @@
+---
+title: "practice practice 2"
+author: "da auta"
+date: "2024-01-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+```{r}
+#Monte_Carlo Monte Carlo Monte-Carlo
+
+beads <- rep(c("Red", "Blue"), times = c(2, 3)) # create an Urn with 2 red, 3 blue beads
+beads # view the beads object
+sample(beads, 1) #sample 1 bead at random
+
+n <- 10000 #number of times to draw 1 bead
+events <- replicate(n, sample(beads, 1)) #draw 1 bead, n times
+tab <- table(events) # make table of the outcomes
+tab #view count table
+prop.table(tab) #view table of outcome proportions
+```
+```{r}
+#notes on seed setting
+
+set.seed(1)
+set.seed(1, sample.kind="Rounding")    # will make R 3.6 generate a seed as in R 3.5
+
+# Using the sample.kind="Rounding" argument will generate a message:
+# 
+# non-uniform 'Rounding' sampler used
+# 
+# This is not a warning or a cause for alarm - it is a confirmation that R is using the alternate seed generation method, and you should expect to receive this message in your console.
+# 
+# If you use R 3.6 or later, you should always use the second form of set.seed() in this course series (outside of DataCamp assignments). Failure to do so may result in an otherwise correct answer being rejected by the grader. In most cases where a seed is required, you will be reminded of this fact.
+```
+
+
+
+```{r}
+#coerce the beads
+beads <- rep(c("red", "blue"), times = c(2, 3))
+beads
+#In R, applying the mean() function to a logical vector returns the proportion of elements that are TRUE. It is very common to use the mean() function in this way to calculate probabilities and we will do so throughout the course.
+mean(beads == "blue")
+
+#This code is broken down into steps inside R. First, R evaluates the logical statement beads == "blue", which generates the vector:
+
+# FALSE FALSE TRUE TRUE TRUE
+# When the mean function is applied, R coerces the logical values to numeric values, changing TRUE to 1 and FALSE to 0:
+# 
+# 0 0 1 1 1
+# The mean of the zeros and ones thus gives the proportion of TRUE values. As we have learned and will continue to see, probabilities are directly related to the proportion of events that satisfy a requirement.
+#
+```
+```{r}
+library(MASS)
+library(gtools)
+#monte carlo with decks of cards
+#expand.grid with paste
+number <- "Three"
+suit <- "Hearts"
+paste(number, suit)
+#joining vectors element-wise with paste
+paste(letters[1:5], as.character(1:5))
+#generating combinations of 2 vectors with expand.grid
+#expand.grid(pants = c("blue", "black"), shirt = c("white", "grey", "plaid"))
+
+#generating a deck of cards
+suits <- c("Diamonds", "Hearts", "Spades", "Clubs")
+numbers <- c("Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King")
+
+deck <- expand.grid(number = numbers, suit = suits)
+deck <- paste(deck$number, deck$suit)
+#deck
+
+#probability of drawing a king
+kings <- paste("King", suits)
+#fractions(mean(deck %in% kings))
+
+#permutations
+library(gtools)
+#permutations(5,2)
+
+#generating 7 digit numbers without repeating values
+all_phone_numbers <- permutations(10, 7, v = 0:9)
+n <- nrow(all_phone_numbers)
+index <- sample(n, 5)
+#all_phone_numbers[index,]
+
+#order doesn't matter in permutations
+#order does matter in combinations (i.e. (1,2) and (2,1) cannot both appear)
+#permutations(5, 2)
+#combinations(5, 2)
+
+
+#probability of drawing king given that a king has already been drawn
+hands <- permutations(52, 2, v = deck)
+first_card <- hands[,1]
+second_card <- hands[,2]
+#probability of A is getting king in first card
+#probability of B is getting king is second card
+#probability of B|A is P(B|A) = P(A and B)\P(A)
+sum(first_card %in% kings)
+sum(first_card %in% kings & second_card %in% kings) / sum(first_card %in% kings)
+
+
+#probability of natural 21 in jackblack
+aces <- paste("Ace", suits) #create vector Ace suit pairs with paste function
+face_card <- c("King", "Queen", "Jack", "Ten") #create vector of face cards for comparison later
+face_card <- expand.grid(number = face_card, suit = suits) #make data.frame of face cards and their suits
+face_card <- paste(face_card$number, face_card$suit) #create vector of face cards with their suit by running along the indices of the face_card data.frame and then running along the suits in the face_card data.frame
+
+#create the combinations of all 2 card hands possible
+hands <- combinations(52, 2, v = deck)
+
+#mean of a 21 given that the ace is listed first in 'combinations'
+mean(hands[,1] %in% aces & hands[,2] %in% face_card)
+
+#probability of natural 21 checking for both ace first and ace second
+mean((hands[,1] %in% aces & hands[,2] %in% face_card)|(hands[,2] %in% face_card & hands[,1] %in% aces))
+
+
+#Monte Carlo approximation(simulation) of natural 21 in blackjack
+hand <- sample(deck, 2)
+hand
+
+#code for 10000 hands of blackjack
+n <- 10000
+results <- replicate(n, {
+  hand <- sample(deck, 2)
+  (hand[1] %in% aces & hand[2] %in% face_card) | (hand[2] %in% aces & hand[1] %in% face_card)
+})
+mean(results)
+```
+```{r}
+#birthday problem
+n <- 50
+bdays <- sample(1:365, n, replace = TRUE) #generate a number from 1 to 365 n times and allow to repeated nubers
+any(duplicated(bdays)) #check for any duplicated numbers
+
+#Monte Carlo simulation with n = 10000 replicates
+alpha <- 100
+results <- replicate(alpha, {
+  bdays <- sample(1:365, n, replace = TRUE)
+  any(duplicated(bdays))
+})
+#mean(results)
+
+#function to calculate probability of shared bdays across n people
+
+n <- 50
+compute_prob <- function(n, alpha = 10000){
+  same_day <- replicate(alpha, {
+  bdays <- sample(1:365, n, replace = TRUE)
+  any(duplicated(bdays))
+})
+mean(same_day)
+}
+#compute_prob(n <- seq(1, 60), 100000) # this doesn't work so use sapply
+
+n <- seq(1,60)
+#plot the monte carlo simulation
+mont_prob <- sapply(n, compute_prob) %>% plot()
+
+#compute the exact probabilites with sapply
+exact_prob <- function(n){
+  prob_unique <- seq(365, 365-n+1)/365 #vector of fractions for mlt. rule
+  1 - prod(prob_unique) #calc prob of no shared bdays and subtract from 1
+}
+eprob <- sapply(n, exact_prob)
+#plot(n, sapply(n, compute_prob))
+mont_prob
+lines(n, eprob, col = "red")
+```
+
+```{r}
+#Monte Carlo simulation, how many is enough?
+b <- 10^seq(1, 5, len = 100)
+
+compute_prob <- function(b, n = 22){ #function to run monte carlo simulation with each value of b
+  same_day <- replicate(b, { #create variable to store 
+    bdays <- sample(1:365, n, replace = TRUE)
+    any(duplicated(bdays))
+  })
+  mean(same_day)
+}
+
+prob <- sapply(b, compute_prob)
+plot(log10(b), prob, type = "l")
+```
+```{r}
+#redoing the monte carlo simulation section
+b <- 10000#initialize number of simulations
+
+#store interations in a variable and set with replicate function
+n <- 23
+bdays <- sample(1:365, n, replace = TRUE)
+prob <- (365*(365-n+1))/365
+any(duplicated(check))
+#
+#monte carlo simulate a bunch(b) of samples of size n
+vector_of_replicates <- replicate(b, {
+  bdays <- sample(1:365, n, replace = TRUE)
+  any(duplicated(bdays))
+})
+mean(vector_of_replicates)
+
+#make a function which does this b times for groups of size n
+dup_days <- function(n, b = 10000){ #this function computes the subset of b for which there are duplicated days
+   repeated_bdays <- replicate(b, { #dont forget to save replications in a variable to use for calculating the mean later
+   bdays <- sample(1:365, n, replace = TRUE)
+   any(duplicated(bdays))
+   })
+  mean(repeated_bdays) #this is called "later" time to calculate the mean(or proportion) of repeated days
+}
+
+#now use sapply to do this fora vector n
+n <- 1:60 #initialize n vector, these are the groups of people to be evaluated for repeated bdays
+#lets_see <- sapply(n, dup_days)
+#plot(n, lets_see)
+
+#calc exact probability
+#make function which calculates probability of there being n people all with unique birthdays
+exact_prob <- function(n){
+  temp_prob <- seq(365, 365-n+1)/365
+  1-prod(temp_prob)
+}
+exact_prob(23)
+n_exact_probs <- sapply(n, exact_prob)
+probs <- sapply(n, dup_days)
+plot(n, probs)
+lines(n, n_exact_probs, col = "red")
+
+```
+```{r}
+#check how many iterations are needed to converge in distribution
+#initialize the number of trials
+b <- 10^seq(1, 5, 100)
+#create function for convergence (im testing b so put that first)
+convergence_in_prob <- function(b, n = 22){
+  same_day <- replicate(b, {#replicate the test for all b from 1 to b
+    bdays <- sample(1:365, n, replace = TRUE)
+    any(duplicated(bdays))
+    })
+  mean(same_day)
+}
+
+#now test this with a vector b of length 100 from 10 trials to 100000 (10^5) trials and look for convergence
+b <- 10^seq(1, 5, len = 100) #specify the len = 100 or this does nothing
+conver_donk <- sapply(b, convergence_in_prob)#put b vector into convergence_test function
+#now plot b, along the test conver_donk
+plot(log10(b), conver_donk, type = "l")
+
+```
+
+
+```{r}
+#playing with goats
+#initialize number of iterations
+b <- 10000
+stick <- replicate(b, {
+  doors <- as.character(1:3)
+  prize <- sample(c("car", "goat", "goat"))
+  prize_door <- doors[prize == "car"]
+  my_pick <- sample(doors, 1)
+  show <- sample(doors[!doors %in% c(my_pick, prize_door)], 1)
+  stick <- my_pick
+  stick == prize_door
+}
+)
+
+#aim for car
+
+#initialize number of trials
+b <- 1000
+#create variable to store logical vector
+got_car_switch <- replicate(b, {
+  doors <- as.character(1:3)
+  prize <- sample(c("car", "goat", "goat"))
+  prize_door <- doors[prize == "car"]
+  my_pick <- sample(doors, 1)
+  show <- sample(doors[!doors %in% c(prize_door, my_pick)], 1)
+  my_pick_switch <- doors[!doors %in% c(my_pick, show)]
+  my_pick_switch == prize_door
+})
+mean(got_car_switch)
+```
+
+```{r}
+
+#Two teams, say the Cavs and the Warriors, are playing a seven game championship series. The first to win four games wins the series. The teams are equally good, so they each have a 50-50 chance of winning each game.
+
+#If the Cavs lose the first game, what is the probability that they win the series?
+#ssign the number of remaining games to the variable n.
+# Assign a variable outcomes as a vector of possible outcomes in a single game, where 0 indicates a loss and 1 indicates a win for the Cavs.
+# Assign a variable l to a list of all possible outcomes in all remaining games. Use the rep function to create a list of n games, where each game consists of list(outcomes).
+# Use the expand.grid function to create a data frame containing all the combinations of possible outcomes of the remaining games.
+# Use the rowSums function to identify which combinations of game outcomes result in the Cavs winning the number of games necessary to win the series.
+# Use the mean function to calculate the proportion of outcomes that result in the Cavs winning the series and print your answer to the console.
+
+
+# Assign a variable 'n' as the number of remaining games.
+n <- 6
+
+# Assign a variable `outcomes` as a vector of possible game outcomes, where 0 indicates a loss and 1 indicates a win for the Cavs.
+outcomes <- 0:1
+
+
+# Assign a variable `l` to a list of all possible outcomes in all remaining games. Use the `rep` function on `list(outcomes)` to create list of length `n`.
+l <- replicate(n, {
+  rep(list(outcomes))
+})
+
+
+# Create a data frame named 'possibilities' that contains all combinations of possible outcomes for the remaining games.
+possibilities <- expand.grid(l)
+#possibilities
+
+
+# Create a vector named 'results' that indicates whether each row in the data frame 'possibilities' contains enough wins for the Cavs to win the series.
+results <- rowSums(possibilities)
+
+
+mean(results >= 4)
+
+
+
+#BELOW IS THE CORRECT ANSWER TO THE ABOVE PROBELM FROM THE CODE THING DATACAMP
+# Assign a variable 'n' as the number of remaining games.
+n <- 6
+
+# Assign a variable `outcomes` as a vector of possible game outcomes, where 0 indicates a loss and 1 indicates a win for the Cavs.
+outcomes <- c(0,1)
+
+# Assign a variable `l` to a list of all possible outcomes in all remaining games. Use the `rep` function on `list(outcomes)` to create list of length `n`. 
+l <- rep(list(outcomes), n)
+
+# Create a data frame named 'possibilities' that contains all combinations of possible outcomes for the remaining games.
+possibilities <- expand.grid(l)
+
+# Create a vector named 'results' that indicates whether each row in the data frame 'possibilities' contains enough wins for the Cavs to win the series.
+results <- rowSums(possibilities)>=4
+
+# Calculate the proportion of 'results' in which the Cavs win the series. Print the outcome to the console.
+mean(results)
+```
+
+```{r}
+#repeat above problem with monte carlo simulation
+#Confirm the results of the previous question with a Monte Carlo simulation to estimate the probability of the Cavs winning the series after losing the first game.
+#Use the replicate function to replicate the sample code for B <- 10000 simulations.
+# Use the sample function to simulate a series of 6 games with random, independent outcomes of either a loss for the Cavs (0) or a win for the Cavs (1) in that order. Use the default probabilities to sample.
+# Use the sum function to determine whether a simulated series contained at least 4 wins for the Cavs.
+# Use the mean function to find the proportion of simulations in which the Cavs win at least 4 of the remaining games. Print your answer to the console.
+
+
+
+# The variable `B` specifies the number of times we want the simulation to run. Let's run the Monte Carlo simulation 10,000 times.
+b <- 10000
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling.
+set.seed(1)
+
+# Create an object called `results` that replicates for `B` iterations a simulated series and determines whether that series contains at least four wins for the Cavs.
+results <- replicate(b, {
+  win_lose <- c(0, 1)
+  series_outcome <- sample(win_lose, 6, replace = TRUE)
+  sum(series_outcome) >= 4
+})
+
+
+
+# Calculate the frequency out of `B` iterations that the Cavs won at least four games in the remainder of the series. Print your answer to the console.
+mean(results)
+```
+
+```{r}
+#Two teams, A and B, are playing a seven series game series. Team A is better than team B and has a p>.5 chance of winning each game.
+
+#Use the function sapply to compute the probability, call it Pr of winning for p <- seq(0.5, 0.95, 0.025).
+#Then plot the result plot(p, Pr).
+
+p <- seq(.5, .95, .025) #probability of team A winning
+n <- 7
+
+# Given a value 'p', the probability of winning the series for the underdog team B can be computed with the following function based on a Monte Carlo simulation:
+prob_win <- function(p){
+  B <- 10000
+  result <- replicate(B, {
+    b_win <- sample(c(1,0), 7, replace = TRUE, prob = c(1-p, p))
+    sum(b_win)>=4
+    })
+  mean(result)
+}
+
+results_for_plot <- sapply(p, prob_win)
+
+plot(p, results_for_plot)
+
+
+
+```
+```{r}
+#Repeat the previous exercise, but now keep the probability that team A wins fixed at p <- 0.75 and compute the probability for different series lengths. For example, wins in best of 1 game, 3 games, 5 games, and so on through a series that lasts 25 games.
+
+
+
+# Given a value 'p', the probability of winning the series for the underdog team B can be computed with the following function based on a Monte Carlo simulation:
+prob_win <- function(N, p=0.75){
+      B <- 10000
+      result <- replicate(B, {
+        b_win <- sample(c(1,0), N, replace = TRUE, prob = c(1-p, p))
+        sum(b_win)>=(N+1)/2
+        })
+      mean(result)
+    }
+
+# Assign the variable 'N' as the vector of series lengths. Use only odd numbers ranging from 1 to 25 games.
+N <- seq(1, 25, 1)
+
+# Apply the 'prob_win' function across the vector of series lengths to determine the probability that team B will win. Call this object `Pr`.
+Pr <- sapply(N, prob_win)
+
+
+# Plot the number of games in the series 'N' on the x-axis and 'Pr' on the y-axis.
+
+plot(N, Pr)
+```
+
+
+```{r}
+library(gtools)
+library(tidyverse)
+set.seed(1)
+b <- 10000
+mont_runners <- replicate(b, {
+  runners <- sample(c("Jamaica", "Jamaica", "Jamaica", "USA", "Ecuador", "Netherlands", "France", "South Africa"))
+  jamaica_won <- c("Jamaica", "Jamaica", "Jamaica")
+  jamaica_won[1] == runners[1] & jamaica_won[2] == runners[2] & jamaica_won[3] == runners[3]
+})
+mean(mont_runners)
+
+
+# b <- 1000
+# #create variable to store logical vector
+# got_car_switch <- replicate(b, {
+#   doors <- as.character(1:3)
+#   prize <- sample(c("car", "goat", "goat"))
+#   prize_door <- doors[prize == "car"]
+#   my_pick <- sample(doors, 1)
+#   show <- sample(doors[!doors %in% c(prize_door, my_pick)], 1)
+#   my_pick_switch <- doors[!doors %in% c(my_pick, show)]
+#   my_pick_switch == prize_door
+# })
+# mean(got_car_switch)
+  runners <- sample(c("Jamaica", "Jamaica", "Jamaica", "USA", "Ecuador", "Netherlands", "France", "South Africa"))
+  jamaica_won <- c("Jamaica", "Jamaica", "Jamaica")
+  jamaica_won[1:3] == runners[1:3]
+  runners[1:3]
+  sample(1:8, 3)
+  
+```
+
+```{r}
+#these are wrong
+6*6*5*4
+6*3*3*5*4
+#you can pick 1 entree from 6 options, 3 sides from 6 options, 1 drink from 3 options
+
+#entree
+entree <- 6
+#sides
+sides <- (6*5*4)/(3*2)
+#drinks
+drinks <- 3
+6*5*4*3
+
+#n choose k
+#do n = 6 choose 3
+#n!/k!(n-k)!
+
+
+
+total_meal_choices <- function(en_op, sides_op = 6, dr_op = 3, en_take = 1, dr_take = 1, sides_take = 2){
+  entree_combo <- factorial(en_op)/(factorial(en_op-en_take)*factorial(en_take))
+  drink_combo <- factorial(dr_op)/(factorial(dr_op-dr_take)*factorial(dr_take))
+  sides_combo <- factorial(sides_op)/(factorial(sides_op-sides_take)*factorial(sides_take))
+  entree_combo*drink_combo*sides_combo
+}
+
+meal_combo_from_1_12 <- sapply(1:12, total_meal_choices)
+meal_combo_from_1_12
+
+total_meal_choices_sides_dif <- function(sides_op, en_op = 6, dr_op = 3, en_take = 1, dr_take = 1, sides_take = 2){
+  entree_combo <- factorial(en_op)/(factorial(en_op-en_take)*factorial(en_take))
+  drink_combo <- factorial(dr_op)/(factorial(dr_op-dr_take)*factorial(dr_take))
+  sides_combo <- factorial(sides_op)/(factorial(sides_op-sides_take)*factorial(sides_take))
+  entree_combo*drink_combo*sides_combo
+}
+
+meal_combo_from_2_12_sides_dif <- sapply(2:12, total_meal_choices_sides_dif)
+for (i in 1:length(meal_combo_from_1_12_sides_dif)) {
+  if(meal_combo_from_1_12_sides_dif[i] >= 365) {
+    print(i)
+  }
+}
+
+
+```
+```{r}
+library(tidyverse)
+data(esoph)
+options(digits = 3)
+
+str(esoph)
+levels(esoph$agegp)
+
+all_cases <- sum(esoph$ncases)
+all_cases
+all_controls <- sum(esoph$ncontrols)
+all_controls
+levels(esoph$alcgp)
+highest_alc <- esoph %>% filter(esoph$alcgp == "120+")
+highest_alc
+
+#probability subject is from highest alc consumption group is also a cancer case
+#A = highest alc consump group B = are cancer case
+#P(B|A) = P(A and B)/P(A)
+#P(A)
+prob_of_A_and_B <- sum(highest_alc$ncases)/(all_cases+all_controls)
+prob_of_A <- (sum(highest_alc$ncases) + sum(highest_alc$ncontrols))/(all_cases + all_controls)
+
+prob_of_A_and_B/prob_of_A
+
+
+#probability that a subject in the lowest alcohol consumption group is a cancer case?
+
+#prob is a cancer case given in lowest alc consumption group
+lowest_alc_group <- esoph %>% filter(alcgp == "0-39g/day")
+lowest_alc_group
+#P(C) = being in lowest alc consumption group, P(D) = is a cancer case
+#P(C and D)
+prob_C_and_D <- sum(lowest_alc_group$ncases)/(all_cases+all_controls)
+prob_C <- (sum(lowest_alc_group$ncases) + sum(lowest_alc_group$ncontrols))/(all_cases+all_controls)
+prob_C_and_D/prob_C
+
+#Given that a person is a case, what is the probability that they smoke 10g or more a day?
+#P(A) = probablity is a case
+#P(B) = prob smoke 10g or more
+#P(A and B) = prob smoke 10g or more and is a case
+#P(A) is a case proportion
+levels(esoph$tobgp)
+case_10g_or_more <- esoph %>% filter(esoph$tobgp %in% c("10-19", "20-29", "30+"))
+a_n_b <- sum(case_10g_or_more$ncases)/(sum(case_10g_or_more$ncases)+sum(case_10g_or_more$ncontrols))
+a_ <- sum(esoph$ncases)/(sum(esoph$ncases)+sum(esoph$ncontrols))
+a_/a_n_b
+sum(case_10g_or_more$ncases)/sum(esoph$ncases)
+
+sum(case_10g_or_more$ncontrols)/sum(esoph$ncontrols)
+
+
+```
+
+
+```{r}
+library(dplyr)
+data("esoph")
+
+str(esoph)
+levels(esoph$alcgp)
+highest_alc <- esoph %>% filter(alcgp == "120+")
+highest_alc_case_ratio <- sum(highest_alc$ncases)/sum(esoph$ncases)
+levels(esoph$tobgp)
+highest_tob <- esoph %>% filter(tobgp == "30+")
+sum(highest_tob$ncases)/sum(esoph$ncases)
+
+highest_both_tob_alc <- esoph %>% filter(tobgp == "30+" & alcgp == "120+")
+sum(highest_both_tob_alc$ncases)/sum(esoph$ncases)
+
+highest_or_tob_alc <- esoph %>% filter(tobgp == "30+"|alcgp == "120+")
+highest_or_tob_alc_case_ratio <- sum(highest_or_tob_alc$ncases)/sum(esoph$ncases)
+
+highest_alc_control_ratio <- sum(highest_alc$ncontrols)/sum(esoph$ncontrols)
+
+highest_alc_case_ratio/highest_alc_control_ratio
+highest_tob_control_ratio <- sum(highest_tob$ncontrols)/sum(esoph$ncontrols)
+highest_tob_control_ratio
+
+highest_both_control_ratio <- sum(highest_both_tob_alc$ncontrols)/sum(esoph$ncontrols)
+highest_both_control_ratio
+highest_or_control_ratio <- sum(highest_or_tob_alc$ncontrols)/sum(esoph$ncontrols)
+highest_or_control_ratio
+
+highest_or_tob_alc_case_ratio/highest_or_control_ratio
+
+```
+
+```{r}
+#discrete probs
+library(dplyr)
+library(dslabs)
+data("heights")
+x <- heights %>% filter(sex == "Male") %>% pull(height)
+
+CDF <- function(a) mean(x <= a)
+1-CDF(70)
+```
+```{r}
+#continuous probs
+
+library(dslabs)
+library(dplyr)
+library(tidyverse)
+data("heights")
+
+#estimate the probability that a male is taller than 70.5 inches
+
+x <- heights %>% filter(sex == "Male") %>% pull(height)
+
+1 - pnorm(70.5, mean(x), sd(x))
+
+#be wary of discretization of data(data being reported more at discrete values due to human nature)
+
+#plot distribution of exact heights in data
+plot(prop.table(table(x)), xlab = "a = height in inches", ylab = "prob of a realize of a") #looking at the data, its clear that discretization has occured
+
+
+#compute actual values using the data
+mean(x <= 68.5) - mean(x <= 67.5) #probs of observing value bewteen 68.5 and 67.5
+mean(x <= 69.5) - mean(x <= 68.5)
+mean(x <= 70.5) - mean(x <= 69.5) #these are exact values from the data
+
+#approximate values with pnorm function
+pnorm(68.5, mean(x), sd(x)) - pnorm(67.5, mean(x), sd(x)) #compared to first line of exact values, decent
+pnorm(69.5, mean(x), sd(x)) - pnorm(68.5, mean(x), sd(x))
+pnorm(70.5, mean(x), sd(x)) - pnorm(69.5, mean(x), sd(x)) #deez are pretty deec...ent
+
+```
+```{r}
+#plotting probability density for normal dist
+
+library(tidyverse)
+x <- seq(-4, 4, length = 100)
+data.frame(x, f = dnorm(x)) %>% ggplot(aes(x, f)) + geom_line(col = "red")
+
+#note dnorm gives the density for the standard norm dist by default. probabilities for alternative normal distributions can be evaluated with dnorm(z, mu, sigma)
+```
+
+```{r}
+library(tidyverse)
+library(dslabs)
+data(heights)
+x <- heights %>% filter(sex == "Male") %>% pull(height)
+
+#generate simulated height data using normal distribution - both datasets should have n observations
+n <- length(x)
+avg <- mean(x)
+s <- sd(x)
+simulated_heights <- rnorm(n, avg, s)
+
+data.frame(simulated_heights = simulated_heights) %>% ggplot(aes(simulated_heights)) + geom_histogram(col = "black", binwidth = 2) #wow no way, it looks normally distrubted, who woulda guessed?
+
+#now by monte carlo simulation
+b <- 10000 #declare number of simulations to run
+tallest <- replicate(b, {
+  simulated_data <- rnorm(800, avg, s) #this rnorm will generate 800 normally distributed random heights
+  max(simulated_data)
+})
+
+mean(tallest >= 7*12)
+
+
+#some final notes
+
+# we have already seen dnorm, pnorm, and rnorm. R uses this convention for most distributions. that is, the convention is to put p (for probability density function), q for quantile, d for density, and r for random before a shorthand for the name of the distribution
+```
+
+```{r}
+library(dslabs)
+set.seed(16, sample.kind = "Rounding")
+
+#simulate data
+b <- 1 #number of iterations
+sim_scores <- rnorm(10000, 20.9, 5.7)
+
+x <- seq(1, 36)
+#x
+f_x <- dnorm(x, 20.9, 5.7)
+
+#ggplot()+geom_line(aes(x, f_x))
+
+act_z <- (sim_scores-mean(sim_scores))/sd(sim_scores)
+#act_z
+#2 or greater z score
+1 - pnorm(2)
+
+#ACT score which corresponds to zscore of 2
+z = 2
+#(sim_scores - mean(sim_scores))/sd(sim_scores)
+z*sd(sim_scores)+mean(sim_scores)
+
+qnorm(.975, mean(sim_scores), sd(sim_scores))
+
+
+act_cdf_func <- function(a){
+  pnorm(a, mean(sim_scores), sd(sim_scores))
+}
+
+#sapply(x, act_cdf_func)
+qnorm(.95, 20.9, 5.7)
+
+
+p <- seq(.01, .99, .01)
+sample_quantiles <- quantile(probs = p, sim_scores)
+#sample_quantiles
+
+#theoretical quantiles
+theoretical_quantiles <- qnorm(p, 20.9, 5.7)
+theoretical_quantiles
+
+qqplot(theoretical_quantiles, sample_quantiles)
+
+```
+
+```{r}
+#redo the above with the website's code
+
+p <- seq(.01, .99, .01)
+sample_quantiles <- quantile(sim_scores, p)
+theoretical_quantiles <- qnorm(p, 20.9, 5.7)
+qplot(theoretical_quantiles, sample_quantiles) + geom_abline()
+```
+
+
+```{r}
+#random variables
+
+#definition: random variables are numeric outcomes resulting from a random process
+
+#define a random variable x to b 1 if blue, 0 otherwise
+beads <- rep(c("red", "blue"), times = c(2, 3))
+x <- ifelse(sample(beads, 1) == "blue", 1, 0)
+
+
+```
+```{r}
+#urns
+
+color <- rep(c("red", "black", "green"), c(18, 18, 2))
+
+n <- 1000
+#X <- sample(ifelse(color == "red", -1, 1), n, replace = TRUE)
+
+X <- sample(c(-1,1), n, replace = TRUE, prob = c(9/19, 10/19))
+
+#total winnings
+S <- sum(X)
+S
+```
+
+```{r}
+#the probability distribution of a random variable: the probability of the observed value falling in any given interval
+#simulate 1000 people playing roulette 10000 times
+n <- 1000 #people
+b <- 10000 #iterations
+S <- replicate(b, {
+  X <- sample(c(-1,1), n, replace = TRUE, prob = c(9/19, 10/19))
+  sum(X)
+})
+#how often do we get sums smaller than or equal to a given value y?
+y <- 0
+mean(S <= y)
+
+
+#now plot so we can show people how cool we are
+library(tidyverse)
+s <- seq(min(S), max(S), length = 100) #sequence of 100 values spanning S
+normal_density <- data.frame(s = s, f = dnorm(s, mean(S), sd(S))) #generate normal density for S
+data.frame(S = S) %>%#make data frame of S for histogram
+  ggplot(aes(S, ..density..)) +
+  geom_histogram(color = "black", binwidth = 10) +
+  ylab("Probability") +
+  geom_line(data = normal_density, mapping = aes(s, f), color = "red")
+```
+
+```{r}
+mu <- 44*((1/5)*(1)+(-.25)*4/5)
+es_d <- sqrt(44)*abs(1-(-.25))*sqrt((1/5)*(4/5))
+
+1 - pnorm(8, mu, es_d)
+```
+```{r}
+set.seed(21, sample.kind = "Rounding")
+
+b <- 10000
+
+dumm_kidz <- replicate(b, {
+  dumm_test <- sample(c(1, -.25), 44, replace = TRUE, prob = c(.2, .8))
+  sum(dumm_test)
+})
+
+dum_avg <- mean(dumm_kidz)
+dum_sd <- sd(dumm_kidz)
+1 - pnorm(8, dum_avg, dum_sd)
+
+p <- seq(.25, .95, .05)
+p
+how_dumm <- function(j, b = 10000, n = 44){
+  dum_sim <- replicate(b, {
+    sim_dum <- sample(c(1,0), n, replace = TRUE, prob = c(j, 1-j))
+    sum(sim_dum)
+  })
+  1 - pnorm(35, mean(dum_sim), sd(dum_sim))
+}
+
+sapply(p, how_dumm)
+
+
+```
+
+```{r}
+#new block kuz previous is getting cluttered
+#how special on roulette betting prob
+
+#five_pockets <- c(00, 0, 1, 2, 3) out of 38
+
+#E[x] for a single bet
+p <- 5/38
+not_p <- 1-p
+exp_one_bet <- (6)*(p)+(-1)*(not_p)
+exp_one_bet
+
+#standard error se(x) stan error
+#sqrt(n)*abs(the difference of the two outcomes)*sqrt(p(1-p))
+stan_err <- (6-(-1))*sqrt(p*not_p)
+stan_err
+n <- 500 #number of times guy places a bet
+b <- 10000
+# guy_bets <- replicate(b, {
+#   sim_sam <- sample(c(6, -1), n, replace = TRUE, prob = c(p, not_p))
+#   sum(sim_sam)
+# })
+
+exp_sum <- replicate(b, {
+})
+X <- sample(c(6, -1), n, replace = TRUE, prob = c(p, not_p))
+500*exp_one_bet
+
+
+mu <- 500 * (6*5/38 + -1*(1 - 5/38))
+mu
+
+er <- sqrt(500) * (abs(-1 - 6) * sqrt(5/38*(1 - 5/38)))
+er
+
+pnorm(0, mu, er)
+
+```
+
+```{r}
+library(tidyverse)
+
+
+#code interest rates sampling model
+n <- 1000
+loss_per_foreclosure <- -200000
+p <- .02
+defaults <- sample(c(0,1), n, prob = c(1-p, p), replace = TRUE)
+sum(defaults*loss_per_foreclosure)
+
+#code interest rate monte carlo simulation
+b <- 10000
+losses <- replicate(b, {
+  defaults <- sample(c(0,1), n, prob = c(1-p, p), replace = TRUE)
+  sum(defaults*loss_per_foreclosure)
+})
+
+#plotting expected losses
+#data.frame(losses_in_millions = losses/10^6) %>% ggplot(aes(losses_in_millions)) + geom_histogram(binwidth = .6, col = "black")
+
+#expected value
+n*(p*loss_per_foreclosure + (1-p)*0)
+#standard error formula sqrt(n)*abs(b-a)*sqrt(p*(1-p))
+sqrt(n)*abs(loss_per_foreclosure)*sqrt(p*(1-p))
+l <- loss_per_foreclosure
+
+
+
+x <- -(l*p)/((1-p))
+x
+
+
+#We want to calculate the value of x for which P(S<0) . The expected value E[S] of the sum of n = 1000 loans given our definitions of x, l, and  p is: mu = n*(p*l+(1-p)*x) where x is the potential profit from giving a loan
+#standard error on the sum of n loans is sigma = abs(x - l)*sqrt(n*p(1-p)) where l is the potential loss from a default on a loan
+
+#a z-score is defined as Z = (x - mu)/sigma and know P(S<0) = P(Z < (0-mu)/sigma), thus P(S<0) = .01
+#thus P(S<0) = .01 (which we want) we can say that
+#P(Z < -mu/sigma) = P(Z < n*(p*l+(1-p)*x)/(abs(x-l)*sqrt(n*p*(1-p)))) = .01
+#z <- qnorm(.01) gives the z value of z for which P(Z<z) = .01
+#meaning z =  n*(p*l+(1-p)*x)/(abs(x-l)*sqrt(n*p*(1-p))) and solving for x gives x = -l*n*p-z*sqrt(n*p*(1-p))/(n*(1-p)+z*sqrt(n*p*(1-p)))
+
+l <- loss_per_foreclosure
+z <- qnorm(.01)
+x <- -l*n*p-z*sqrt(n*p*(1-p))/(n*(1-p)+z*sqrt(n*p*(1-p)))
+x/180000 #interest rate
+loss_per_foreclosure*p + x*(1-p) #expected value of the profit per loan
+n*(loss_per_foreclosure*p + x*(1-p)) #expected value of the profit over n loans
+
+#monte carlo simulation for 1% probability of losing money
+b <- 10000
+q <- 1-p
+profit <- replicate(b, {
+  draws <- sample(c(0,1), n, prob = c(1-p, p), replace = TRUE)
+  sum(draws)
+})
+mean(profit) #expected value of profit over n loans
+mean(profit<0) #probability of losing money
+
+
+#expected value with higher default rate and interest rate
+p <- .04
+loss_per_foreclosure <- -200000
+r <- .05 #interest rate?
+x <- r*180000
+loss_per_foreclosure*p + (1-p)*x #expected value
+
+#we can define our desired probability of losing money as z: P(S<0)=P(Z<-E[S]/SE[S])=P(Z<z)
+#after simplification we see that z = -sqrt(n)*mu/sigma
+#to find the value of n for which z is less than or equal to our desired value, solve for n
+#we get that n >= (z^2)*(sigma^2)/mu^2
+
+z <- qnorm(.01)
+# mu <- loss_per_foreclosure*p + (1-p)*x
+# sigma <- sqrt()
+
+l <- loss_per_foreclosure
+n <- ceiling((z^2)*((x-l)^2)*p*(1-p))/(l*p+x*(1-p))^2 #number of loans required
+n*(loss_per_foreclosure*p + (1-p)*x) #expected value on n loans
+
+
+#monte carlo simulation with known default probability 
+b <- 10000
+p <- .04
+x <- .05*180000
+profit <- replicate(b, {
+  draws <- sample(c(x, loss_per_foreclosure), n, prob = c(1-p, p), replace = TRUE)
+  sum(draws)
+})
+mean(profit)
+mean(profit<0)
+
+
+#monte carlo simulation with unknown default probability
+b <- 10000
+p <- .04
+x <- .05*180000
+profit <- replicate(b, {
+  new_p <- .04 + sample(seq(-.01, .01, length = 100), 1)
+  draws <- sample(c(x, loss_per_foreclosure), n, replace = TRUE, prob = c(1-new_p, new_p))
+  sum(draws)
+})
+mean(profit)
+mean(profit<0)
+mean(profit < -10000000) #probability of losing over 10 mil dollars
+
+
+```
+```{r}
+# Assign the number of loans to the variable `n`
+n <- 10000
+
+# Assign the loss per foreclosure to the variable `loss_per_foreclosure`
+loss_per_foreclosure <- -200000
+
+# Assign the probability of default to the variable `p_default`
+p_default <- 0.03
+
+# Generate a variable `z` using the `qnorm` function
+z <- qnorm(.05)
+
+# Generate a variable `x` using `z`, `p_default`, `loss_per_foreclosure`, and `n`
+x <- -(n*loss_per_foreclosure*p_default-z*loss_per_foreclosure*sqrt(n*p_default*(1-p_default)))/(z*sqrt(n*p_default*(1-p_default))+n*(1-p_default))
+
+# Convert `x` to an interest rate, given that the loan amount is $180,000. Print this value to the console.
+x/180000
+```
+
+```{r}
+library(dslabs)
+library(tidyverse)
+take_poll(50)
+```
+
+```{r}
+#compute probability of being with .01 of the actual proportion of the population
+X_hat <- 0.48
+se <- sqrt(X_hat*(1-X_hat)/25)
+pnorm(0.01/se) - pnorm(-0.01/se)
+```
+
+```{r}
+library(dslabs)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(gridExtra)
+p <- runif(1)
+n <- 1000
+
+x <- sample(c(0,1), n, replace = TRUE, prob = c(1-p, p))
+x_hat <- mean(x)
+x_hat
+
+b <- 10000
+x_shat <- replicate(b, {
+  sim_sam <- sample(c(0,1), n, prob = c(1-p, p), replace = TRUE)
+  mean(sim_sam)
+})
+
+
+plot_1 <- data.frame(x_shat = x_shat) %>%
+  ggplot(aes(x_shat)) + geom_histogram(binwidth = .005, color = "black")
+
+plot_2 <- data.frame(x_shat = x_shat) %>%
+  ggplot(aes(sample = x_shat)) +
+  stat_qq(dparams = list(mean = mean(x_shat), sd = sd(x_shat))) +
+  geom_abline() +
+  ylab("X_SHAT") +
+  xlab("Theoretical Normal")
+grid.arrange(plot_1, plot_2, nrow = 1)
+
+#spread is a weird thing that I don't understand
+#it's defined as p-(1-p) or as 2p - 1
+#the expected value of the spread is 2*X_bar - 1
+#the standard error of the spread is 2*SE(X_bar)
+#the margin of error of the spread is 2 times the margin of error of X_bar
+
+```
+```{r}
+library(tidyverse)
+n <- 100000
+p <- seq(.01, .99, length = 100)
+se <- sapply(p, function(x) 2*sqrt(x*(1-x)/n))
+data.frame(p = p, se = se) %>%
+  ggplot(aes(p, se)) +
+  geom_line()
+```
+
+```{r}
+n <- seq(100, 5000, len = 100)
+p <- .5
+se <- sqrt(p*(1-p)/n)
+
+n <- p*(1-p)/(.01^2)
+n
+
+plot(se, ylim = c(0, .02), xlim = c(0,5000))
+```
+```{r}
+data("nhtemp")
+data.frame(year = as.numeric(time(nhtemp)), temperature = as.numeric(nhtemp)) %>%
+  ggplot(aes(year, temperature)) +
+  geom_point() +
+  geom_smooth() +
+  ggtitle("Average yearly termps in New Haven")
+```
+
+```{r}
+#monte carlo simulation of confidence intervals
+n <- 1000
+p <- .45
+x <- sample(c(0,1), n, replace = TRUE, prob = c(1-p, p))
+x_hat <- mean(x)
+se_hat <- sqrt(x_hat*(1-x_hat)/n)
+
+c(x_hat - 2*se_hat, x_hat + 2*se_hat)
+
+#solving for z with qnorm
+z <- qnorm(.995)
+
+pnorm(qnorm(.995)) #demonstrates that qnorm gives the zvalue for a given probability
+pnorm(qnorm(1-.995))#symmetry of 1-qnorm
+pnorm(z) - pnorm(-z)
+
+```
+
+```{r}
+b <- 10000
+n <- 1000
+p <- .45
+inside <- replicate(b, {
+  X <- sample(c(0,1), n, replace = TRUE, prob = c(1-p, p))
+  x_hat <- mean(X)
+  se_hat <- sqrt(x_hat*(1-x_hat)/n)
+  between(p, x_hat - 2*se_hat, x_hat + 2*se_hat)
+})
+
+mean(inside)
+
+#confidence interval for the spread of sample size 25
+n <- 25
+x_hat <- .48
+(2*x_hat - 1) + c(-2, 2)*2*sqrt(x_hat*(1-x_hat)/n)
+```
+
+```{r}
+library(dslabs)
+data("polls_us_election_2016")
+
+str(polls_us_election_2016)
+
+#polls_us_election_2016$state
+
+polls_us_election_2016_enddate <- polls_us_election_2016 %>% mutate(enddate_oct = as.Date(polls_us_election_2016$enddate))
+
+polls <- polls_us_election_2016_enddate %>% filter(enddate_oct >= as.Date("2016-10-31") & state == "U.S.")
+
+nrow(polls)
+
+n <- polls$samplesize[1]
+n
+
+
+X_hat <- polls$rawpoll_clinton[1]/100
+X_hat
+
+se_hat <- sqrt(x_hat*(1-X_hat)/n)
+se_hat
+
+#confidence interval
+ci <- c(X_hat - qnorm(.975)*se_hat, X_hat + qnorm(.975)*se_hat)
+ci
+
+
+
+#Create a new object called pollster_results that contains the pollster's name, the end date of the poll, the proportion of voters who declared a vote for Clinton, the standard error of this estimate, and the lower and upper bounds of the confidence interval for the estimate.
+pollster_results <- polls %>% data.frame(name = polls$pollster, enddate = polls$enddate) %>% mutate(propor = polls$rawpoll_clinton/100, se = sqrt((polls$rawpoll_clinton/100)*(1-polls$rawpoll_clinton/100)/polls$samplesize), upper_ci = propor - qnorm(.975)*se, lower_ci = propor + qnorm(.975)*se)
+pollster_results
+
+
+pollster_results %>% select(pollster)
+
+
+```
+
+```{r}
+library(dslabs)
+data("polls_us_election_2016")
+
+polls <- polls_us_election_2016 %>% filter(enddate >= "2016-10-31" & state == "U.S.")
+#polls
+#Use the mutate function to define four new columns: X_hat, se_hat, lower, and upper. Temporarily add these columns to the polls object that has already been loaded for you.
+
+#Create a new object called pollster_results that contains the pollster's name, the end date of the poll, the proportion of voters who declared a vote for Clinton, the standard error of this estimate, and the lower and upper bounds of the confidence interval for the estimate.
+pollster_results <- polls %>%
+  mutate(X_hat = polls$rawpoll_clinton/100, se_hat = sqrt(polls$rawpoll_clinton/100*(1-polls$rawpoll_clinton/100)/polls$samplesize), lower = X_hat - qnorm(.975)*se_hat, upper = X_hat + qnorm(.975)*se_hat) %>%
+  select(pollster, enddate, X_hat, se_hat, lower, upper)
+
+pollster_results
+
+```
+```{r}
+#what a fucking disaster of a section
+#no one should pay money for this part of the course
+# Exercise 5. Confidence interval for d
+# A much smaller proportion of the polls than expected produce confidence intervals containing 
+# . Notice that most polls that fail to include 
+#  are underestimating. The rationale for this is that undecided voters historically divide evenly between the two main candidates on election day.
+# 
+# In this case, it is more informative to estimate the spread or the difference between the proportion of two candidates 
+# , or 
+#  for this election.
+# 
+# Assume that there are only two parties and that 
+# . Construct a 95% confidence interval for difference in proportions on election night.
+# 
+# Instructions
+# 70 XP
+# Use the mutate function to define a new variable called 'd_hat' in polls as the proportion of Clinton voters minus the proportion of Trump voters.
+# Extract the sample size N from the first poll in your subset object polls.
+# Extract the difference in proportions of voters d_hat from the first poll in your subset object polls.
+# Use the formula above to calculate 
+#  from d_hat. Assign 
+#  to the variable X_hat.
+# Find the standard error of the spread given N. Save this as se_hat.
+# Calculate the 95% confidence interval of this estimate of the difference in proportions, d_hat, using the qnorm function.
+# Save the lower and upper confidence intervals as an object called ci. Save the lower confidence interval first.
+
+
+
+# Add a statement to this line of code that will add a new column named `d_hat` to `polls`. The new column should contain the difference in the proportion of voters.
+polls <- polls_us_election_2016 %>% filter(enddate >= "2016-10-31" & state == "U.S.") 
+
+
+# Assign the sample size of the first poll in `polls` to a variable called `N`. Print this value to the console.
+n <- polls$samplesize[1]
+n
+
+# Assign the difference `d_hat` of the first poll in `polls` to a variable called `d_hat`. Print this value to the console.
+polls %>% mutate(d_hat = polls$rawpoll_clinton/100-polls$rawpoll_trump/100)
+polls$d_hat
+
+# Assign proportion of votes for Clinton to the variable `X_hat`.
+X_hat <- (d_hat+1)/2
+
+# Calculate the standard error of the spread and save it to a variable called `se_hat`. Print this value to the console.
+se_hat <- 2*sqrt(X_hat*(1-X_hat)/n)
+se_hat
+
+
+
+
+# Use `qnorm` to calculate the 95% confidence interval for the difference in the proportions of voters. Save the lower and then the upper confidence interval to a variable called `ci`.
+
+
+ci <- c(d_hat - qnorm(.975)*se_hat, d_hat + qnorm(.975)*se_hat)
+
+
+#more disaster section for Inference and Modeling Modelling
+#confidence interval for spread...i think?! the instructions make things extremely unclear, if you're reading this, don't waste time on trying to follow the instructions
+
+#Create a new object called pollster_results that contains the pollster's name, the end date of the poll, the difference in the proportion of voters who declared a vote either, and the lower and upper bounds of the confidence interval for the estimate.
+#Use the mutate function to define four new columns: 'X_hat', 'se_hat', 'lower', and 'upper'. Temporarily add these columns to the polls object that has already been loaded for you.
+#In the X_hat column, calculate the proportion of voters for Clinton using d_hat.
+#In the se_hat column, calculate the standard error of the spread for each poll using the sqrt function.
+#In the lower column, calculate the lower bound of the 95% confidence interval using the qnorm function.
+#In the upper column, calculate the upper bound of the 95% confidence interval using the qnorm function.
+#Use the select function to select the pollster, enddate, d_hat, lower, upper columns from polls to save to the new object pollster_results.
+
+
+
+
+
+
+
+# The subset `polls` data with 'd_hat' already calculated has been loaded. Examine it using the `head` function.
+head(polls)
+
+# Create a new object called `pollster_results` that contains columns for pollster name, end date, d_hat, lower confidence interval of d_hat, and upper confidence interval of d_hat for each poll.
+pollster_results <- polls %>%
+                mutate(X_hat = (d_hat+1)/2, se_hat = 2*sqrt(X_hat*(1-X_hat)/samplesize), lower = d_hat - qnorm(.975)*se_hat, upper = d_hat + qnorm(.975)*se_hat) %>% select(pollster, enddate, d_hat, lower, upper)
+
+```
+
+```{r}
+#disaster section continued
+# i dont even care if this is as bad or im starting to figure it out. this section was bad. bad bad bad. this is not user error or laziness. this is extremely lazy or poorly planned course design. anyway. onwards
+
+library(dslabs)
+# The `polls` object has already been loaded. Examine it using the `head` function.
+head(polls)
+#let's add the stupid column for spread data bc datacamp is doing it automatically
+polls %>% mutate(d_hat = rawpoll_clinton/100 - rawpoll_trump/100)
+
+# Add variable called `error` to the object `polls` that contains the difference between d_hat and the actual difference on election day. Then make a plot of the error stratified by pollster, but only for pollsters who took 5 or more polls.
+# Remake the plot you made for the previous exercise(i did not include that plot here bc im dumb), but only for pollsters that took five or more polls.
+# 
+# You can use dplyr tools group_by and n to group data by a variable of interest and then count the number of observations in the groups. The function filter filters data piped into it by your specified condition.
+# 
+# For example:
+# 
+# data %>% group_by(variable_for_grouping) 
+#     %>% filter(n() >= 5)
+
+polls %>% mutate(errors = d_hat - .021) %>% group_by(pollster) %>% filter(n() >= 5) %>% ggplot(aes(errors, pollster)) + geom_point()
+```
+
+
+```{r}
+#simulating polls
+d <- .039
+Ns <- c(1298, 533, 1342, 897, 774, 254, 812, 324, 1291, 1056, 2172, 516)
+p <- (d+1)/2 #this is true bc d is defined as d = 2*p-1 (all that was done here was to solve for p)
+
+#confidence interval of the spread
+confidence_interval <- sapply(Ns, function(N){
+  X <- sample(c(0,1), N, replace = TRUE, prob = c(1-p, p)) #generating a proportion with the given p
+  X_hat <- mean(X) #what is the proportion
+  SE_hat <- sqrt(X_hat*(1-X_hat)/N)
+  2*c(X_hat, X_hat - qnorm(.975)*SE_hat, X_hat + qnorm(.975)*SE_hat) - 1
+})
+confidence_interval
+polls <- data.frame(poll = 1:ncol(confidence_interval), t(confidence_interval), sample_size = Ns)
+names(polls) <- c("poll", "estimate", "low", "high", "sample_size")
+polls
+
+#calculating spread of combined polls
+d_hat <- polls %>%
+  summarize(avg = sum(estimate*sample_size)/sum(sample_size)) %>%
+  .$avg
+
+p_hat <- (d_hat+1)/2
+moe <- 2*qnorm(.975)*sqrt(p_hat*(1-p_hat)/sum(polls$sample_size))
+round(d_hat*100, 1)
+round(moe*100, 1)
+
+```
+```{r}
+library(dslabs)
+data(polls_us_election_2016)
+names(polls_us_election_2016)
+
+#only keeping national polls from week before election with grade considered reliable
+polls <- polls_us_election_2016 %>% filter(state == "U.S." & enddate >= "2016-10-31" & (grade %in% c("A+", "A", "A-", "B+")|is.na(grade)))
+
+#add spread to estimate
+polls <- polls %>% mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
+
+#compute estimate spread for combined polls
+d_hat <- polls %>% summarize(d_hat = sum(spread*samplesize)/sum(samplesize)) %>% .$d_hat
+
+#compute margin of error
+p_hat <- (d_hat + 1)/2
+moe <- 2*qnorm(.975)*sqrt(p_hat*(1-p_hat)/sum(polls$samplesize))
+
+#histo this bisto, of the spread
+polls %>% ggplot(aes(spread)) + geom_histogram(color = "yellow", binwidth = .01)
+
+#investigation poll data and polster bias
+
+polls %>% group_by(pollster) %>% summarize(n())
+
+#plot results from pollsters with at least 6 polls
+polls %>% group_by(pollster) %>%
+  filter(n() >= 6) %>%
+  ggplot(aes(pollster, spread)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .4))
+
+
+#standard errors within each pollster
+polls %>% group_by(pollster) %>% filter(n() >= 6) %>% summarize(se = 2*sqrt(p_hat*(1-p_hat)/median(samplesize)))
+
+
+#collect last results before the election for each pollster
+one_poll_per <- polls %>% group_by(pollster) %>% filter(enddate == max(enddate)) %>% #keep last poll
+  ungroup()
+
+#hist of spread estimates
+one_poll_per %>% ggplot(aes(spread)) + geom_histogram(color = "yellow", binwidth = .01)
+
+#construct 95% confidence interval
+results <- one_poll_per %>%
+  summarize(avg = mean(spread), se = sd(spread)/sqrt(length(spread))) %>%
+  mutate(start = avg - 1.96*se, end = avg + 1.96*se)
+round(results*100, 1)
+
+#What does the central limit theory tell us about the sample average and how it is related to mu, the population average?
+#t is a random variable with expected value mu and standard error sigma/sqrt(n)
+
+```
+
+```{r}
+#monte carlo simulation of confidence intervals
+#Now run a Monte Carlo simulation in which you compute 10,000 confidence intervals as you have just done. What proportion of these intervals include mu?
+
+
+
+# Define `mu` as the population average
+mu <- mean(x)
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling
+set.seed(1)
+
+# Define `N` as the number of people measured
+N <- 50
+
+# Define `B` as the number of times to run the model
+B <- 10000
+
+# Define an object `res` that contains a logical vector for simulated intervals that contain mu
+res <- replicate(B, {
+  new_x <- sample(x, N, replace = TRUE)
+  x_bar <- mean(new_x)
+  stan_dev <- sd(new_x)/sqrt(length(new_x))
+  z <- qnorm(.975)
+  lower <- x_bar - z*stan_dev
+  upper <- x_bar + z*stan_dev
+  interval <- c(lower, upper)
+  between(mu, lower, upper)
+})
+# Calculate the proportion of results in `res` that include mu. Print this value to the console.
+
+mean(res)
+
+
+
+
+#failed to figure out this problem
+# The `polls` data have already been loaded for you. Use the `head` function to examine them.
+head(polls)
+
+# Create an object called `res` that summarizes the average, standard deviation, and number of polls for the two pollsters.
+res <- polls %>% group_by(pollster) %>% 
+  summarize(avg = mean(spread), s = sd(spread), N = n()) 
+
+# Store the difference between the larger average and the smaller in a variable called `estimate`. Print this value to the console.
+estimate <- res$avg[2] - res$avg[1]
+estimate
+
+# Store the standard error of the estimates as a variable called `se_hat`. Print this value to the console.
+se_hat <- sqrt(res$s[2]^2/res$N[2] + res$s[1]^2/res$N[1])
+se_hat
+
+# Calculate the 95% confidence interval of the spreads. Save the lower and then the upper confidence interval to a variable called `ci`.
+ci <- c(estimate - qnorm(0.975)*se_hat, estimate + qnorm(0.975)*se_hat)
+
+#r3production of the above problem
+#create the object to store the summary of average, standard deviation, and number of polls for the two pollsters
+res <- polls %>% group_by(pollster) %>% summarize(avg = mean(spread), s = sd(spread), N = n())
+
+#now store the difference bewteen the large average and smaller in a variable called estimate
+estimate <- res$avg[2] - res$avg[1]
+estimate
+
+#store the standard error of the estimates as a variable called se_hat
+se_hat <- sqrt(res$s[2]^2/res$N[2] + res$s[1]^2/res$N[1])
+se_hat
+
+#calculate the 95% confidence interval of the spreads.
+ci <- c(estimate - se_hat*qnorm(.975), estimate + se_hat*qnorm(.975))
+ci
+
+
+
+
+```
+```{r}
+#bayesian statistics
+#monte carlo simulation using diseases
+
+
+prev <- .00025 #disease prevalence
+n <- 100000 #number of tests
+outcome <- sample(c("diseased","healthy"), n, replace = TRUE, prob = c(prev, 1 - prev))
+
+
+n_d <- sum(outcome == "diseased") #number of diseased
+n_h <- sum(outcome == "healthy") #number of healthy
+
+#for each person, randomly determine if test is + or -
+accuracy <- .99
+test <- vector("character", n)
+test[outcome == "healthy"] <- sample(c("-", "+"), n_h, replace = TRUE, prob = c(accuracy, 1 - accuracy))
+test[outcome == "diseased"] <- sample(c("+", "-"), n_d, replace = TRUE, prob = c(accuracy, 1 - accuracy))
+
+
+
+table(outcome, test)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#election forecasting
+
+#This code from previous videos defines the results object used for empirical Bayes election forecasting.
+library(dslabs)
+library(tidyverse)
+data(polls_us_election_2016)
+polls <- polls_us_election_2016 %>% filter(state == "U.S." & enddate >= "2016-10-31" & (grade %in% c("A+", "A", "A-", "B+")|is.na(grade))) %>% mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
+
+one_poll_per_pollster <- polls %>% group_by(pollster) %>% filter(enddate == max(enddate)) %>% ungroup()
+
+results <- one_poll_per_pollster %>% summarize(avg = mean(spread), se = sd(spread)/sqrt(length(spread))) %>% mutate(start = avg - se*1.96, end = avg + se*1.96)
+
+results
+
+#computing posterior mean, standard error, credible interval and probability
+mu <- 0
+tau <- .035
+sigma <- results$se
+Y <- results$avg
+B <- sigma^2/(sigma^2 + tau^2)
+posterior_mean <- B*mu + (1 - B)*Y
+posterior_se <- sqrt(1/(1/sigma^2 + 1/tau^2))
+
+posterior_mean
+posterior_se
+
+#95% credible interval
+ci <- c(posterior_mean - qnorm(.975)*posterior_se, posterior_mean + qnorm(.975)*posterior_se)
+
+#probability that d is greater than zero ( prob(d > 0) )
+1 - pnorm(0, posterior_mean, posterior_se)
+
+#simulated data with X_j = d + e_j
+j <- 6
+n <- 2000
+d <- .021
+p <- (d+1)/2
+
+X <- d + rnorm(j, 0, 2*sqrt(p*(1-p)/n))
+
+#simulated data with X_ij = d + e_i, j
+i <- 5
+j <- 6
+n <- 2000
+d <- .021
+p <- (1+d)/2
+X <- sapply(1:i, function(I){
+  d + rnorm(j, 0, 2*sqrt(p*(1-p)/n))
+})
+
+#simulated data with X_ij = d + h_i + e_i, j
+i <- 5
+j <- 6
+n <- 2000
+d <- .021
+p <- (1+d)/2
+h <- rnorm(i, 0, .025) #assume standard error of pollster-to-pollster variability is 0
+X <- sapply(1:i, function(I){
+  d + h[i] + rnorm(j, 0, 2*sqrt(p*(1-p)/n))
+})
+
+#caluclating probability of d > 0
+mu <- 0
+tau <- .035
+sigma <- sqrt(results$se^2 + .025^2)
+Y <- results$avg
+B <- sigma^2/(sigma^2 + tau^2)
+
+posterior_mean <- B*mu + (1 - B)*Y
+posterior_se <- sqrt(1/(1/sigma^2 + 1/tau^2))
+
+1 - pnorm(0, posterior_mean, posterior_se)
+
+
+
+```
+
+
+```{r}
+#predicting the electoral college
+library(tidyverse)
+library(dslabs)
+data("polls_us_election_2016")
+#head(results_us_election_2016)
+
+#results_us_election_2016 %>% arrange(desc(electoral_votes)) %>% top_n(5, electoral_votes)
+
+#computing the average and standard deviation for each state
+results <- polls_us_election_2016 %>%
+  filter(state != "U.S." &
+           !grepl("CD", state) &
+           enddate >= "2016-10-31" &
+           (grade %in% c("A+", "A", "A-", "B+") | is.na(grade))) %>%
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) %>%
+  group_by(state) %>%
+  summarize(avg = mean(spread), sd = sd(spread), n = n()) %>%
+  mutate(state = as.character(state))
+#results
+
+#10 closest races = battleground states
+#results %>% arrange(abs(avg))
+
+#joining the electoral votes and results
+results <- left_join(results, results_us_election_2016, by = "state")
+#results
+
+#states with no polls: note that rhode island and district of columbia = democrat
+#results_us_election_2016 %>% filter(!state %in% results$state)
+
+#assigns sd to states which only had one poll with the median of the other sd values
+results <- results %>% mutate(sd = ifelse(is.na(sd), median(results$sd, na.rm = TRUE), sd))
+
+#--------------------------------------------------------------------
+#calculating posterior mean and se standard error
+mu <- 0
+tau <- .02
+results %>% mutate(sigma = sd/sqrt(n),
+                   B = sigma^2/(sigma^2 + tau^2),
+                   posterior_mean = B*mu + (1 - B)*avg,
+                   posterior_se = sqrt(1/(1/sigma^2 + 1/tau^2))) %>%
+  arrange(abs(posterior_mean))
+
+
+#monte carlo simulation of election night results (no general bias)
+mu <- 0 
+tau <- .02
+clinton_ev <- replicate(1000, {
+  results %>% mutate(sigma = sd/sqrt(n),
+                     B = sigma^2/(sigma^2 + tau^2),
+                     posterior_mean = B*mu + (1 - B)*avg,
+                     posterior_se = sqrt(1/(1/sigma^2 + 1/tau^2)),
+                     simulated_result = rnorm(length(posterior_mean), posterior_mean, posterior_se),
+                     clinton = ifelse(simulated_result > 0, electoral_votes, 0)) %>% #awards votes if clinton wins state
+    summarize(clinton = sum(clinton)) %>% #total votes for clinton
+    .$clinton + 7
+})
+
+mean(clinton_ev > 269)
+
+#histogram of results
+data.frame(clinton_ev) %>% ggplot(aes(clinton_ev)) + geom_histogram(binwidth = 1) + geom_vline(xintercept = 269)
+
+
+#monte carlo simulation including general bias
+mu <- 0 
+tau <- .02
+bias_sd <- .03
+clinton_ev_2 <- replicate(1000, {
+  results %>% mutate(sigma = sqrt((sd^2)/n + bias_sd^2), #added bias term
+                     B = sigma^2/(sigma^2 + tau^2),
+                     posterior_mean = B*mu + (1 - B)*avg,
+                     posterior_se = sqrt(1/(1/sigma^2 + 1/tau^2)),
+                     simulated_res = rnorm(length(posterior_mean), posterior_mean, posterior_se),
+                     clinton = ifelse(simulated_res > 0, electoral_votes, 0)) %>% #award votes if clinton wins state
+    summarize(clinton = sum(clinton)) %>%
+    .$clinton + 7
+    
+})
+
+mean(clinton_ev_2 > 269)
+
+#histogram of the results with bias taken into account
+data.frame(clinton_ev_2) %>% ggplot(aes(clinton_ev_2)) + geom_histogram(binwidth = 1) + geom_vline(xintercept = 269)
+
+```
+
+```{r}
+#variability across one pollster
+library(tidyverse)
+library(dslabs)
+data("polls_us_election_2016")
+
+#select all national polls by a single pollster
+one_pollster <- polls_us_election_2016 %>% filter(pollster == "Ipsos" & state == "U.S.") %>% mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
+
+
+#compare the observed standard error with the theoretical one
+se <- one_pollster %>% summarize(empirical = sd(spread), theoretical = 2*sqrt(mean(spread)*(1 - mean(spread))/min(samplesize)))
+se
+
+#look at the distribution of the data. is it normal? the correct answer is no you dufus
+one_pollster %>% ggplot(aes(spread)) + geom_histogram(binwidth = .01, color = "blue")
+
+
+#trend across time for several pollsters
+polls_us_election_2016 %>%
+  filter(state == "U.S." & enddate >= "2016-07-01") %>%
+  group_by(pollster) %>%
+  filter(n() >= 10) %>%
+  ungroup() %>%
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) %>%
+  ggplot(aes(enddate, spread)) +
+  geom_smooth(method = "loess", span = .1) +
+  geom_point(aes(color = pollster), show.legend = FALSE, alpha = .6)
+  
+#plotting raw percentages across time
+polls_us_election_2016 %>%
+  filter(state == "U.S." & enddate >= "2016-07-01") %>%
+  select(enddate, pollster, rawpoll_clinton, rawpoll_trump) %>%
+  rename(Clinton = rawpoll_clinton, Trump = rawpoll_trump) %>%
+  gather(candidate, percentage, -enddate, -pollster) %>%
+  mutate(candidate = factor(candidate, levels = c("Trump", "Clinton"))) %>%
+  group_by(pollster) %>%
+  filter(n() >= 10) %>%
+  ungroup() %>%
+  ggplot(aes(enddate, percentage, color = candidate)) +
+  geom_point(show.legend = FALSE, alpha = .4) +
+  geom_smooth(method = "loess", span = .15) +
+  scale_y_continuous(limits = c(30, 50))
+
+```
+
+
+```{r}
+#datacamp assignment for election forecasting
+# Load the libraries and data
+library(dplyr)
+library(dslabs)
+data("polls_us_election_2016")
+
+# Create a table called `polls` that filters by  state, date, and reports the spread
+polls <- polls_us_election_2016 %>% 
+  filter(state != "U.S." & enddate >= "2016-10-31") %>% 
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
+
+# Create an object called `cis` that columns for the lower and upper confidence intervals. Select the columns indicated in the instructions.
+cis <- polls %>% mutate(X_hat = (spread+1)/2, se = 2*sqrt(X_hat*(1-X_hat)/samplesize), 
+                 lower = spread - qnorm(0.975)*se, upper = spread + qnorm(0.975)*se) %>%
+  select(state, startdate, enddate, pollster, grade, spread, lower, upper)
+
+
+#---------------------------------------------------------------------------------------
+# Add the actual results to the `cis` data set
+add <- results_us_election_2016 %>% mutate(actual_spread = clinton/100 - trump/100) %>% select(state, actual_spread)
+ci_data <- cis %>% mutate(state = as.character(state)) %>% left_join(add, by = "state")
+
+# Create an object called `p_hits` that summarizes the proportion of confidence intervals that contain the actual value. Print this object to the console.
+p_hits <- ci_data %>% mutate(hit = actual_spread < upper & actual_spread > lower) %>% summarize(avg = mean(hit))
+p_hits
+#----------------------------------------------------------------------------------------
+# The `cis` data have already been loaded for you
+add <- results_us_election_2016 %>% mutate(actual_spread = clinton/100 - trump/100) %>% select(state, actual_spread)
+ci_data <- cis %>% mutate(state = as.character(state)) %>% left_join(add, by = "state")
+
+# Create an object called `p_hits` that summarizes the proportion of hits for each pollster that has at least 5 polls. 
+p_hits <- ci_data %>% mutate(hit = lower <= actual_spread & upper >= actual_spread) %>% 
+  group_by(pollster) %>%
+  filter(n() >=  5) %>%
+  summarize(proportion_hits = mean(hit), n = n(), grade = grade[1]) %>%
+  arrange(desc(proportion_hits))
+p_hits
+#----------------------------------------------------------------------------------------
+# The `cis` data have already been loaded for you
+add <- results_us_election_2016 %>% mutate(actual_spread = clinton/100 - trump/100) %>% select(state, actual_spread)
+ci_data <- cis %>% mutate(state = as.character(state)) %>% left_join(add, by = "state")
+
+# Create an object called `p_hits` that summarizes the proportion of hits for each state that has more than 5 polls.
+
+p_hits <- ci_data %>%
+mutate(hit = actual_spread >= lower & actual_spread <= upper) %>%
+group_by(state) %>%
+filter(n() > 5) %>%
+summarize(proportion_hits = mean(hit), n = n())
+p_hits
+#----------------------------------------------------------------------------------------
+# The `p_hits` data have already been loaded for you. Use the `head` function to examine it.
+head(p_hits)
+
+# Make a barplot of the proportion of hits for each state
+p_hits %>% mutate(state = reorder(state, proportion_hits)) %>%
+ggplot(aes(state, proportion_hits, color = state)) +
+geom_bar(stat = "identity", show.legend = FALSE) +
+coord_flip()
+#----------------------------------------------------------------------------------------
+# The `cis` data have already been loaded. Examine it using the `head` function.
+head(cis)
+
+# Create an object called `errors` that calculates the difference between the predicted and actual spread and indicates if the correct winner was predicted
+errors <- cis %>% mutate(error = spread - actual_spread, hit = sign(spread) == sign(actual_spread))
+
+# Examine the last 6 rows of `errors`
+tail(errors)
+#----------------------------------------------------------------------------------------
+# Create an object called `errors` that calculates the difference between the predicted and actual spread and indicates if the correct winner was predicted
+errors <- cis %>% mutate(error = spread - actual_spread, hit = sign(spread) == sign(actual_spread))
+
+# Create an object called `p_hits` that summarizes the proportion of hits for each state that has 5 or more polls
+p_hits <- errors %>%  group_by(state) %>%
+  filter(n() >=  5) %>%
+  summarize(proportion_hits = mean(hit), n = n())
+
+# Make a barplot of the proportion of hits for each state
+p_hits %>% mutate(state = reorder(state, proportion_hits)) %>%
+  ggplot(aes(state, proportion_hits)) + 
+  geom_bar(stat = "identity") +
+ coord_flip()
+#----------------------------------------------------------------------------------------
+# The `errors` data have already been loaded. Examine them using the `head` function.
+head(errors)
+
+# Generate a histogram of the error
+hist(errors$error)
+
+# Calculate the median of the errors. Print this value to the console.
+median(errors$error)
+#----------------------------------------------------------------------------------------
+# The `errors` data have already been loaded. Examine them using the `head` function.
+head(errors)
+
+# Create a boxplot showing the errors by state for polls with grades B+ or higher
+errors %>% filter(grade %in% c("A+", "A", "A-", "B+")) %>% mutate(state = reorder(state, error)) %>% ggplot(aes(state, error)) + geom_boxplot() + geom_point()
+#----------------------------------------------------------------------------------------
+# The `errors` data have already been loaded. Examine them using the `head` function.
+head(errors)
+
+# Create a boxplot showing the errors by state for states with at least 5 polls with grades B+ or higher
+errors %>% mutate(state = reorder(state, error)) %>% filter(n() >= 5 & grade %in% c("A+", "A", "A-", "B+")) %>% group_by(state) %>% ggplot(aes(state, error)) + geom_boxplot() + geom_point()
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+```
+
+```{r}
+#t dist t-dist tdist t distribution
+z <- qt(.975, nrow(one_poll_per_pollster) - 1)
+one_poll_per_pollster %>%
+  summarize(avg = mean(spread), moe = z*sd(spread)/sqrt(length(spread))) %>%
+  mutate(start = avg - moe, end = avg + moe)
+
+
+#quantile from t-dist versus normal dist
+qt(.975, 14)
+qnorm(.975)
+
+#----------------------------------------------------------------------------------------
+# Calculate the probability of seeing t-distributed random variables being more than 2 in absolute value when 'df = 3'. 
+1 - pt(2, 3) + pt(-2, 3)
+#----------------------------------------------------------------------------------------
+# Generate a vector 'df' that contains a sequence of numbers from 3 to 50
+df <- seq(3, 50)
+
+# Make a function called 'pt_func' that calculates the probability that a value is more than |2| for any degrees of freedom 
+pt_func <- function(x){
+    1 - pt(2, x) + pt(-2, x)
+}
+
+
+# Generate a vector 'probs' that uses the `pt_func` function to calculate the probabilities
+probs <- sapply(df, pt_func)
+
+# Plot 'df' on the x-axis and 'probs' on the y-axis
+plot(df, probs)
+#----------------------------------------------------------------------------------------
+# Load the neccessary libraries and data
+library(dslabs)
+library(dplyr)
+data(heights)
+
+# Use the sample code to generate 'x', a vector of male heights
+x <- heights %>% filter(sex == "Male") %>%
+  .$height
+
+# Create variables for the mean height 'mu', the sample size 'N', and the number of times the simulation should run 'B'
+mu <- mean(x)
+N <- 15
+B <- 10000
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling
+set.seed(1)
+
+# Generate a logical vector 'res' that contains the results of the simulations
+res <- replicate(B, {
+  samp <- sample(x, N, replace = TRUE)
+  lower <- mean(samp) - qnorm(.975)*sd(samp)/sqrt(N)
+  upper <- mean(samp) + qnorm(.975)*sd(samp)/sqrt(N)
+  interval <- c(lower, upper)
+  between(mu, lower, upper)
+})
+
+
+# Calculate the proportion of times the simulation produced values within the 95% confidence interval. Print this value to the console.
+mean(res)
+#----------------------------------------------------------------------------------------
+# The vector of filtered heights 'x' has already been loaded for you. Calculate the mean.
+mu <- mean(x)
+
+# Use the same sampling parameters as in the previous exercise.
+set.seed(1)
+N <- 15
+B <- 10000
+
+# Generate a logical vector 'res' that contains the results of the simulations using the t-distribution
+res <- replicate(B, {
+    samp <- sample(x, N, replace = TRUE)
+    lower <- mean(samp) - qt(.975, N - 1)*sd(samp)/sqrt(N)
+    upper <- mean(samp) + qt(.975, N - 1)*sd(samp)/sqrt(N)
+    interval <- c(lower, upper)
+    between(mu, lower, upper)
+})
+
+
+
+
+
+# Calculate the proportion of times the simulation produced values within the 95% confidence interval. Print this value to the console.
+mean(res)
+#----------------------------------------------------------------------------------------
+# The vector of filtered heights 'x' has already been loaded for you. Calculate the mean.
+mu <- mean(x)
+
+# Use the same sampling parameters as in the previous exercise.
+set.seed(1)
+N <- 15
+B <- 10000
+
+# Generate a logical vector 'res' that contains the results of the simulations using the t-distribution
+res <- replicate(B, {
+  X <- sample(x, N, replace=TRUE)
+  interval <- mean(X) + c(-1,1)*qt(0.975, N-1)*sd(X)/sqrt(N)
+  between(mu, interval[1], interval[2])
+})
+
+# Calculate the proportion of times the simulation produced values within the 95% confidence interval. Print this value to the console.
+mean(res)
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+```
+
+```{r}
+
+library(tidyverse)
+library(dslabs)
+data("research_funding_rates")
+research_funding_rates
+
+#research funding rates example
+
+#compute totals which were successful or not
+totals <- research_funding_rates %>%
+  select(-discipline) %>%
+  summarize_all(list(sum)) %>%
+  summarize(yes_men = awards_men,
+            no_men = applications_men - awards_men,
+            yes_women = awards_women,
+            no_women = applications_women - awards_women)
+
+
+#compare percentage of men/women with awards
+totals %>% summarize(percent_men = yes_men/(yes_men + no_men),
+                     percent_women = yes_women/(yes_women + no_women))
+#----------------------------------------------------------------------------------------
+
+#two-by-two table and p-value for the Lady Tasting Tea problem
+
+tab <- matrix(c(3, 1, 1, 3), 2, 2)
+rownames(tab) <- c("Poured Before", "Poured After")
+colnames(tab) <- c("Guessed Before", "Guessed After")
+tab
+
+#p-value calculation with Fisher's Exact test
+fisher.test(tab, alternative = "greater")
+
+#----------------------------------------------------------------------------------------
+#chi squared test chi-squared
+
+
+#compute overall funding rate
+funding_rate <- totals %>%
+  summarize(percent_total = (yes_men + yes_women)/(yes_men + yes_women + no_men + no_women)) %>%
+  .$percent_total
+funding_rate
+
+
+#construct two-by-two table for observed data
+t_b_t <- tibble(awarded = c("no", "yes"),
+                men = c(totals$no_men, totals$yes_men),
+                women = c(totals$no_women, totals$yes_women))
+t_b_t
+
+#compute the null hypothesis two by two table
+tibble(awarded = c("no", "yes"),
+       men = (totals$no_men + totals$yes_men)*c(1 - funding_rate, funding_rate),
+       women = (totals$no_women + totals$yes_women)*c(1 - funding_rate, funding_rate))
+
+#chi tibble test
+chisq_test <- t_b_t %>%
+  select(-awarded) %>%
+  chisq.test()
+chisq_test$p.value
+
+#odds ratio
+#odds of getting funding for men
+odds_men <- (t_b_t$men[2]/sum(t_b_t$men))/(t_b_t$men[1]/sum(t_b_t$men))
+#odds of getting funding for women
+odds_women <- (t_b_t$women[2]/sum(t_b_t$women))/(t_b_t$women[1]/sum(t_b_t$women))
+#odds ratio - how many times larger odds are for men than women
+odds_men/odds_women
+#----------------------------------------------------------------------------------------
+
+#p-value and odds ratio responses to increasing sample size
+t_b_t %>%
+  select(-awarded) %>%
+  mutate(men = men*10, women = women*10) %>%
+  chisq.test() #the concern here is that the number of data points increased and p-value got very small, but the p-value does not tell the whole story, you would need to look at the odds ratio again
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+```
+```{r}
+#----------------------------------------------------------------------------------------
+# The 'errors' data have already been loaded. Examine them using the `head` function.
+head(errors)
+
+# Generate an object called 'totals' that contains the numbers of good and bad predictions for polls rated A- and C-
+totals <- errors %>%
+  filter(grade %in% c("A-", "C-")) %>%
+  group_by(grade,hit) %>%
+  summarize(num = n()) %>%
+  spread(grade, num)
+
+# Print the proportion of hits for grade A- polls to the console
+totals[[2,3]]
+#/
+sum(totals[[3]])
+
+# Print the proportion of hits for grade C- polls to the console
+totals[[2,2]]/sum(totals[[2]])
+#----------------------------------------------------------------------------------------
+# The 'totals' data have already been loaded. Examine them using the `head` function.
+head(totals)
+
+# Perform a chi-squared test on the hit data. Save the results as an object called 'chisq_test'.
+chisq_test <- totals %>% select(-hit) %>% chisq.test()
+
+
+
+
+# Print the p-value of the chi-squared test to the console
+chisq_test$p.value
+#----------------------------------------------------------------------------------------
+# The 'totals' data have already been loaded. Examine them using the `head` function.
+head(totals)
+
+# Generate a variable called `odds_C` that contains the odds of getting the prediction right for grade C- polls
+odds_C <- (totals[[2,2]]/sum(totals[[2]]))/(totals[[1,2]]/sum(totals[[2]]))
+
+
+# Generate a variable called `odds_A` that contains the odds of getting the prediction right for grade A- polls
+odds_A <- (totals[[2,3]]/sum(totals[[3]]))/(totals[[1,3]]/sum(totals[[3]]))
+
+
+
+# Calculate the odds ratio to determine how many times larger the odds ratio is for grade A- polls than grade C- polls
+odds_A/odds_C
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#unix stuff
+# ls #list dir content
+# mkdir folder_name #create directory called "folder_name"
+# rmdir folder_name  #remove an empty directory as long as it is empty
+# rm -r folder_name  #remove dir that is not empty, "r" stands for recursive
+# cd: change dir
+# ../ # two dots represents parent dir
+# . # single dot represents current workingdir 
+# cd ~/projects # concatenate with forward slashes
+# cd ../.. # change to two parent layer beyond
+# cd -  # whatever dir you were before
+# cd  # return to the home dir
+#----------------------------------------------------------------------------------------
+# mv path-to-file path-to-destination-directory
+# rm filename-1 filename-2 filename-3
+
+#----------------------------------------------------------------------------------------
+# Code
+# # a sample code chunk
+# ```{r}
+# summary(pressure)
+# ```
+# 
+# # When echo=FALSE, code will be hided in output file
+# ```{r echo=FALSE}
+# summary(pressure)
+# ```
+# 
+# # use a descriptive name for each chunk for debugging purpose
+# ```{r pressure-summary}
+# summary(pressure)
+# ```
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------
+```
+
+```{r}
+?spread
+#teeny change
+x <- 5+6
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
